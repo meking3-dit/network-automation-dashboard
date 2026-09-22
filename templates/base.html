@@ -1,0 +1,58 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}NetOps{% endblock %} · Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="{% url 'dashboard' %}">
+        <span class="brand-mark"><span></span><span></span><span></span></span>
+        <span><strong>NETOPS</strong><small>COMMAND CENTER</small></span>
+      </a>
+      <nav>
+        <p class="nav-label">Workspace</p>
+        <a class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><span>⌂</span> Overview</a>
+        <a class="nav-item {% if 'device' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'device-list' %}"><span>⌘</span> Devices</a>
+        <a class="nav-item {% if 'group' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'group-list' %}"><span>◫</span> Groups</a>
+        <a class="nav-item {% if 'credential' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'credential-list' %}"><span>◇</span> Credentials</a>
+        <p class="nav-label">Automation</p>
+        <a class="nav-item {% if request.resolver_match.url_name == 'job-create' %}active{% endif %}" href="{% url 'job-create' %}"><span>▶</span> Run commands</a>
+        <a class="nav-item {% if request.resolver_match.url_name == 'template-list' %}active{% endif %}" href="{% url 'template-list' %}"><span>▤</span> Templates</a>
+        <a class="nav-item {% if 'job-' in request.resolver_match.url_name and request.resolver_match.url_name != 'job-create' %}active{% endif %}" href="{% url 'job-list' %}"><span>◷</span> Job history</a>
+        <a class="nav-item {% if 'backup' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'backup-list' %}"><span>⬡</span> Backups</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>
+        <div><strong>{{ request.user.username }}</strong><small>Operator session</small></div>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button title="Sign out">↗</button></form>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-button" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+        <div><span class="eyebrow">Network automation</span><h1>{% block page_title %}Overview{% endblock %}</h1></div>
+        <div class="top-actions"><span class="environment"><i></i> SYSTEM READY</span><a class="btn btn-primary" href="{% url 'job-create' %}">+ New execution</a></div>
+      </header>
+      {% if messages %}<div class="messages">{% for message in messages %}<div class="alert {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+      <section class="content">{% block content %}{% endblock %}</section>
+    </main>
+  </div>
+  <script>
+    document.querySelectorAll('[data-template-select]').forEach(function(select) {
+      select.addEventListener('change', function() {
+        var option = select.options[select.selectedIndex];
+        var commands = option.dataset.commands;
+        if (commands) document.getElementById('id_commands').value = commands;
+      });
+    });
+  </script>
+</body>
+</html>

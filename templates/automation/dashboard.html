@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% block title %}Overview{% endblock %}{% block page_title %}Network overview{% endblock %}
+{% block content %}
+<div class="hero"><div><span class="eyebrow">Live workspace</span><h2>Your network, one command away.</h2><p>Monitor inventory, run workflows, and keep a complete audit trail from a single control plane.</p></div><div class="hero-grid"><span></span><span></span><span></span><span></span></div></div>
+<div class="stat-grid">
+  <a class="stat-card" href="{% url 'device-list' %}"><span class="stat-icon cyan">⌘</span><div><small>Managed devices</small><strong>{{ device_count }}</strong><p><i class="status-dot"></i> {{ online_count }} previously reachable</p></div></a>
+  <a class="stat-card" href="{% url 'group-list' %}"><span class="stat-icon purple">◫</span><div><small>Device groups</small><strong>{{ group_count }}</strong><p>Organized targets</p></div></a>
+  <a class="stat-card" href="{% url 'job-list' %}"><span class="stat-icon amber">◷</span><div><small>Total jobs</small><strong>{{ job_count }}</strong><p>Recent activity below</p></div></a>
+  <a class="stat-card" href="{% url 'job-list' %}"><span class="stat-icon red">!</span><div><small>Failed jobs</small><strong>{{ failed_count }}</strong><p>Require review</p></div></a>
+</div>
+<div class="quick-actions">
+  <a href="{% url 'job-create' %}?kind=test"><span>↗</span><div><strong>Test connectivity</strong><small>Validate SSH access</small></div></a>
+  <a href="{% url 'job-create' %}?kind=show"><span>›_</span><div><strong>Run show commands</strong><small>Gather operational data</small></div></a>
+  <a href="{% url 'job-create' %}?kind=config"><span>±</span><div><strong>Deploy configuration</strong><small>Push controlled changes</small></div></a>
+  <a href="{% url 'job-create' %}?kind=backup"><span>⬡</span><div><strong>Back up configs</strong><small>Capture running state</small></div></a>
+</div>
+<div class="two-column">
+  <section class="panel"><div class="panel-head"><div><span class="eyebrow">Activity</span><h3>Recent jobs</h3></div><a href="{% url 'job-list' %}">View all →</a></div>
+    <div class="table-wrap"><table><thead><tr><th>Job</th><th>Type</th><th>Status</th><th>Started</th></tr></thead><tbody>{% for job in recent_jobs %}<tr><td><a class="strong-link" href="{% url 'job-detail' job.pk %}">{{ job.name }}</a></td><td>{{ job.get_kind_display }}</td><td><span class="badge {{ job.status }}">{{ job.get_status_display }}</span></td><td>{{ job.created_at|timesince }} ago</td></tr>{% empty %}<tr><td colspan="4" class="empty">No executions yet. Your automation history will appear here.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+  <section class="panel"><div class="panel-head"><div><span class="eyebrow">Recovery</span><h3>Latest backups</h3></div><a href="{% url 'backup-list' %}">View all →</a></div><div class="backup-list">{% for backup in recent_backups %}<a href="{% url 'backup-detail' backup.pk %}"><span class="file-icon">CFG</span><div><strong>{{ backup.device.name }}</strong><small>{{ backup.created_at|date:'M j, Y · H:i' }}</small></div><span>→</span></a>{% empty %}<div class="empty">No configuration backups captured yet.</div>{% endfor %}</div></section>
+</div>
+{% endblock %}
