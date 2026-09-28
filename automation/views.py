@@ -8,9 +8,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from .forms import CommandTemplateForm, CredentialForm, DeviceForm, DeviceGroupForm, JobForm
+from .forms import CommandTemplateForm, CredentialForm, DeviceForm, DeviceGroupForm, JobForm, RegistrationForm
 from .models import CommandTemplate, ConfigurationBackup, Credential, Device, DeviceGroup, Job
 from .tasks import execute_job
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    if request.method == "POST":
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account created. You can now sign in.")
+            return redirect("login")
+    else:
+        form = RegistrationForm()
+    return render(request, "registration/register.html", {"form": form})
 
 
 @login_required

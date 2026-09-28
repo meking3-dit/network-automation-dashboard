@@ -24,6 +24,8 @@ uv run celery -A config worker --loglevel=info
 
 Open `http://127.0.0.1:8000`, sign in, then create a credential, device/group, and execution. The Django admin is at `/admin/`.
 
+Self-registration is invite-only. Set a long, private `REGISTRATION_CODE` in `.env`, then share it out of band with approved operators. Registration remains disabled when this setting is empty. Rotate the code after distributing access if it may have been exposed.
+
 For a demo or test environment without a Redis worker, set `CELERY_TASK_ALWAYS_EAGER=True`. Jobs will execute inside the web request, so this mode is not suitable for production.
 
 ## Execution behavior
@@ -36,6 +38,12 @@ For a demo or test environment without a Redis worker, set `CELERY_TASK_ALWAYS_E
 - Selecting groups and individual devices produces one deduplicated set of enabled targets.
 
 Every target gets its own `JobResult`; every command is written to `CommandLog`, including phase, output, and success state.
+
+## Password recovery
+
+The sign-in page includes a **Forgot password?** link. Django sends a single-use reset URL to the email address stored on the operator account. In local development, the default console email backend prints that message and link in the `runserver` terminal.
+
+For production, set `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend` and configure the `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, and `DEFAULT_FROM_EMAIL` values documented in `.env.example`. Each operator must have a valid email address on their Django user account.
 
 ## Security notes
 

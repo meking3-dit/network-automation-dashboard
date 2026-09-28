@@ -6,6 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, True),
     CELERY_TASK_ALWAYS_EAGER=(bool, False),
+    EMAIL_PORT=(int, 587),
+    EMAIL_USE_TLS=(bool, True),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
@@ -77,6 +79,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+REGISTRATION_CODE = env("REGISTRATION_CODE", default="")
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="NetOps <noreply@localhost>")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env("EMAIL_USE_TLS")
 
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")

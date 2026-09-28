@@ -1,0 +1,18 @@
+{% extends 'registration/auth_base.html' %}
+{% block title %}Create account{% endblock %}
+{% block eyebrow %}Invite-only registration{% endblock %}
+{% block heading %}Create your account.{% endblock %}
+{% block subtitle %}Choose your operator credentials and enter the private registration code supplied by your administrator.{% endblock %}
+{% block content %}
+  <form method="post" class="form-stack">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+    <div><label for="id_username">Username</label>{{ form.username }}{{ form.username.errors }}</div>
+    <div><label for="id_email">Email address</label>{{ form.email }}{{ form.email.errors }}<small>{{ form.email.help_text }}</small></div>
+    <div><label for="id_password1">Password</label>{{ form.password1 }}{{ form.password1.errors }}<small>{{ form.password1.help_text }}</small></div>
+    <div><label for="id_password2">Confirm password</label>{{ form.password2 }}{{ form.password2.errors }}</div>
+    <div><label for="id_registration_code">Registration code</label>{{ form.registration_code }}{{ form.registration_code.errors }}<small>{{ form.registration_code.help_text }}</small></div>
+    <button class="btn btn-primary btn-wide">Create account →</button>
+  </form>
+{% endblock %}
+{% block footer %}<p class="auth-footer">Already registered? <a href="{% url 'login' %}">Sign in</a></p>{% endblock %}

@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.db import connection
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .forms import JobForm
@@ -12,7 +13,9 @@ from .tasks import execute_job
 
 class AutomationTestCase(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user("operator", password="test-pass-123")
+        self.user = get_user_model().objects.create_user(
+            "operator", email="operator@example.com", password="test-pass-123"
+        )
         self.credential = Credential.objects.create(
             name="Lab SSH", username="admin", password="sensitive-password", secret="enable-secret"
         )
@@ -33,6 +36,54 @@ class AutomationTestCase(TestCase):
         self.assertRedirects(response, f"{reverse('login')}?next=/")
         self.client.force_login(self.user)
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+
+    @override_settings(REGISTRATION_CODE="private-invite-code")
+    def test_registration_requires_the_configured_code(self):
+        registration_data = {
+            "username": "new-operator",
+            "email": "new-operator@example.com",
+            "password1": "Secure-registration-password-789!",
+            "password2": "Secure-registration-password-789!",
+            "registration_code": "wrong-code",
+        }
+        response = self.client.post(reverse("register"), registration_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "registration code is invalid")
+        self.assertFalse(get_user_model().objects.filter(username="new-operator").exists())
+
+        registration_data["registration_code"] = "private-invite-code"
+        response = self.client.post(reverse("register"), registration_data)
+        self.assertRedirects(response, reverse("login"))
+        new_user = get_user_model().objects.get(username="new-operator")
+        self.assertEqual(new_user.email, "new-operator@example.com")
+        self.assertTrue(new_user.check_password("Secure-registration-password-789!"))
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_forgotten_password_can_be_reset_from_email_link(self):
+        response = self.client.post(
+            reverse("password_reset"), {"email": self.user.email}
+        )
+        self.assertRedirects(response, reverse("password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+
+        reset_path = next(
+            line.split("testserver", 1)[1]
+            for line in mail.outbox[0].body.splitlines()
+            if "testserver/accounts/reset/" in line
+        )
+        response = self.client.get(reset_path)
+        self.assertEqual(response.status_code, 302)
+        set_password_path = response["Location"]
+        response = self.client.post(
+            set_password_path,
+            {
+                "new_password1": "New-secure-password-456!",
+                "new_password2": "New-secure-password-456!",
+            },
+        )
+        self.assertRedirects(response, reverse("password_reset_complete"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("New-secure-password-456!"))
 
     def test_operator_pages_render(self):
         self.client.force_login(self.user)

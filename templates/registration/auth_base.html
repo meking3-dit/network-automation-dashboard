@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Account{% endblock %} · NetOps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="login-body">
+  <main class="login-card">
+    <a class="brand login-brand" href="{% url 'login' %}">
+      <span class="brand-mark"><span></span><span></span><span></span></span>
+      <span><strong>NETOPS</strong><small>COMMAND CENTER</small></span>
+    </a>
+    <p class="eyebrow">{% block eyebrow %}Secure operator access{% endblock %}</p>
+    <h1>{% block heading %}Account access{% endblock %}</h1>
+    <p class="muted auth-subtitle">{% block subtitle %}{% endblock %}</p>
+    {% block content %}{% endblock %}
+    {% block footer %}{% endblock %}
+  </main>
+</body>
+</html>
