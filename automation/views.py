@@ -223,6 +223,11 @@ class JobList(SecureListView):
     def get_queryset(self):
         return Job.objects.select_related("created_by").annotate(device_count=Count("devices")).order_by("-created_at")
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_jobs"] = any(j.status in (Job.Status.QUEUED, Job.Status.RUNNING) for j in context["jobs"])
+        return context
+
 
 @login_required
 def job_detail(request, pk):

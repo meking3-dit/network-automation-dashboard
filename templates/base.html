@@ -53,6 +53,24 @@
         if (commands) document.getElementById('id_commands').value = commands;
       });
     });
+
+    (function poll() {
+      var content = document.querySelector('.content');
+      if (!content || !content.querySelector('[data-autorefresh]')) return;
+      setTimeout(function() {
+        fetch(location.href, {credentials: 'same-origin', headers: {'X-Requested-With': 'fetch'}})
+          .then(function(r) { return r.ok ? r.text() : Promise.reject(); })
+          .then(function(html) {
+            var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('.content');
+            if (!fresh) return;
+            var open = Array.from(content.querySelectorAll('details')).map(function(d) { return d.open; });
+            content.innerHTML = fresh.innerHTML;
+            content.querySelectorAll('details').forEach(function(d, i) { if (i < open.length) d.open = open[i]; });
+          })
+          .catch(function() {})
+          .then(poll);
+      }, 3000);
+    })();
   </script>
 </body>
 </html>
