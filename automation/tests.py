@@ -2,12 +2,14 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .forms import JobForm
 from .models import CommandLog, CommandTemplate, ConfigurationBackup, Credential, Device, Job
+from .services import netmiko_connection
 from .tasks import execute_job
 
 
@@ -140,3 +142,25 @@ class AutomationTestCase(TestCase):
         execute_job.apply(args=[job.pk]).get()
         backup = ConfigurationBackup.objects.get(job=job, device=self.device)
         self.assertEqual(backup.content, "hostname core-01\ninterface Loopback0")
+
+    @patch("automation.services.paramiko.SSHClient")
+    @patch("automation.services.ConnectHandler")
+    def test_jump_server_tunnel_is_used_when_enabled(self, connect_handler, ssh_client):
+        jump_cred = Credential.objects.create(name="jump", username="jumpuser", password="jp")
+        self.device.use_jump_server = True
+        self.device.jump_host = "198.51.100.1"
+        self.device.jump_credential = jump_cred
+        self.device.save()
+        client = ssh_client.return_value
+        channel = client.get_transport.return_value.open_channel.return_value
+        with netmiko_connection(self.device):
+            pass
+        client.connect.assert_called_once()
+        self.assertEqual(client.connect.call_args.kwargs["username"], "jumpuser")
+        self.assertIs(connect_handler.call_args.kwargs["sock"], channel)
+        client.close.assert_called_once()
+
+    def test_jump_server_requires_host_and_credential(self):
+        self.device.use_jump_server = True
+        with self.assertRaises(ValidationError):
+            self.device.full_clean()

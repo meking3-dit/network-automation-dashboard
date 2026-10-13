@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from .fields import EncryptedTextField
@@ -45,6 +46,13 @@ class Device(TimestampedModel):
     port = models.PositiveIntegerField(default=22)
     credential = models.ForeignKey(Credential, on_delete=models.PROTECT, related_name="devices")
     groups = models.ManyToManyField(DeviceGroup, blank=True, related_name="devices")
+    use_jump_server = models.BooleanField(default=False, help_text="Connect to this device through a jump server")
+    jump_host = models.CharField(max_length=255, blank=True, help_text="Jump server IP address or hostname")
+    jump_port = models.PositiveIntegerField(default=22)
+    jump_credential = models.ForeignKey(
+        Credential, on_delete=models.PROTECT, null=True, blank=True, related_name="jump_devices",
+        help_text="Credential used to log in to the jump server",
+    )
     enabled = models.BooleanField(default=True)
     last_seen = models.DateTimeField(null=True, blank=True)
     last_error = models.TextField(blank=True)
@@ -54,6 +62,17 @@ class Device(TimestampedModel):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        if self.use_jump_server:
+            errors = {}
+            if not self.jump_host:
+                errors["jump_host"] = "Jump host is required when using a jump server."
+            if not self.jump_credential_id:
+                errors["jump_credential"] = "Jump credential is required when using a jump server."
+            if errors:
+                raise ValidationError(errors)
 
     def connection_params(self):
         return {

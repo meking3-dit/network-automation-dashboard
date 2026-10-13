@@ -60,7 +60,7 @@ class StyledModelForm(forms.ModelForm):
 class DeviceForm(StyledModelForm):
     class Meta:
         model = Device
-        fields = ["name", "host", "device_type", "port", "credential", "groups", "enabled"]
+        fields = ["name", "host", "device_type", "port", "credential", "use_jump_server", "jump_host", "jump_port", "jump_credential", "groups", "enabled"]
         widgets = {"groups": forms.CheckboxSelectMultiple()}
 
 
