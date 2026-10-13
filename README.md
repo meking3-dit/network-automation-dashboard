@@ -1,6 +1,6 @@
 # NetOps Command Center
 
-A Netmiko network automation dashboard built with Django, Celery, and Redis. It provides encrypted credential storage, inventory and group targeting, show/config command execution, reusable templates, job and command-level logging, configuration backups, and pre/post-change validation.
+A Netmiko network automation dashboard built with Django, Celery, and Redis. It provides encrypted credential storage, inventory and group targeting, show/config command execution, reusable templates, optional jump-server access, job and command-level logging, configuration backups, and pre/post-change validation.
 
 ## Quick start
 
@@ -37,7 +37,15 @@ For a demo or test environment without a Redis worker, set `CELERY_TASK_ALWAYS_E
 - Optional pre/post commands are collected with `send_command` and labeled in the result output.
 - Selecting groups and individual devices produces one deduplicated set of enabled targets.
 
+- Job history and job detail pages refresh automatically every few seconds while a job is queued or running, and stop once it finishes.
+
 Every target gets its own `JobResult`; every command is written to `CommandLog`, including phase, output, and success state.
+
+## Jump server
+
+Tick **Use jump server** on a device to reach it through an SSH jump host. Then set the jump host, port (default 22), and a jump credential (any saved credential, used for password login to the jump server). The app logs in to the jump server, opens a `direct-tcpip` tunnel to the device's host and port, and runs Netmiko over it using the device's own credential and enable secret. The jump session closes when the job's connection ends.
+
+Notes: the jump server's host key is auto-accepted and not verified, and only password authentication is supported for the jump server.
 
 ## Password recovery
 
